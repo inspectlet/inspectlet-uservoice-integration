@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+  <head>
+    <title>Inspectlet</title>
+    <link href="https://cdn.uservoice.com/packages/gadget.css" media="all" rel="stylesheet" type="text/css" />
+      
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.min.js"></script>
+    
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"></script>
+    
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.min.css">
+    
+    <script type="text/javascript">
+      
+      function getParameterByName(name) {
+          name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+          var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+              results = regex.exec(location.search);
+          return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+      }
+      
+      angular.module('myApp', []).controller('myAppController', function($scope, $http) {
+        window.$scope = $scope;
+        var scope = this;
+        
+        var appy = this;
+        
+        scope.email = getParameterByName('email');
+        
+        scope.usersessions = [];
+        
+        scope.fetchData = function(){
+          
+          var username = "";
+          var apitoken = "";
+          
+          $http({
+            method: "POST",
+            url: 'https://api.inspectlet.com/v1/websites/2596013025/sessions',
+            headers: {"Authorization": "Basic " + btoa(username + ":" + apitoken)},
+            data: {
+              search: JSON.stringify({
+                tags        : {
+                  tagslist  : [
+                    {
+                      tag   : 'email',
+                      value : scope.email
+                    }
+                  ]
+                }
+              })
+            }
+          }).then(function(apiResponse){
+            scope.usersessions = apiResponse.data.response;
+            scope.usersessions.forEach(function(usersession){
+              usersession.display_date = moment(usersession.date_start_session*1000).format("MMMM D h:mm A");
+            });
+            
+          });
+          
+        }
+        
+      });
+      
+    </script>
+      
+    <style>
+    
+      .red{
+        color: #E17A69;
+      }
+      
+      .green{
+        color: #84C26D;
+      }
+      
+      .yellow{
+        color: #FECB78;
+      }
+      
+      .blue{
+        color: #6EA6DF;
+      }
+      
+      strong{
+        font-weight: 600;
+      }
+      
+      .usersessions i{
+        margin-right: 5px;
+      }
+      
+      .usersessions a{
+        text-decoration: none;
+      }
+    
+    </style>
+    
+
+  </head>
+  <body ng-controller="myAppController as myApp" ng-init="myApp.fetchData()">
+    
+    <p>
+      <strong>Sessions recordings found: <span class="green">{{myApp.usersessions.length}}</span></strong> 
+    </p>
+    
+    <div class="usersessions" ng-repeat="usersession in myApp.usersessions">
+      <i class="fa fa-video-camera blue"></i>
+      <a href="{{usersession.sessionlink}}" target="_blank">{{usersession.display_date}}</a>
+    </div>
+    
+    
+    <script src="https://cdn.uservoice.com/packages/gadget.js"
+      type="text/javascript"></script>
+  </body>
+</html>
